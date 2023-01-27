@@ -20,6 +20,9 @@ public:
 	ASCharacter();
 
 protected:
+	UPROPERTY(EditAnywhere)
+	TSubclassOf<AActor> ProjectileClass;
+	
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Enhanced Input")
 	class UInputMappingContext* InputMapping;
 
@@ -29,22 +32,31 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Enhanced Input")
 	class UInputAction* IA_Look;
 	
-	UPROPERTY(VisibleAnywhere);
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Enhanced Input")
+	class UInputAction* IA_PrimaryAttack;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Enhanced Input")
+	class UInputAction* IA_Jump;
+	
+	UPROPERTY(VisibleAnywhere)
 	TObjectPtr<USpringArmComponent> SpringArmComp;
 
-	UPROPERTY(VisibleAnywhere);
+	UPROPERTY(VisibleAnywhere)
 	TObjectPtr<UCameraComponent> CameraComp;
 
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
-
-	void MoveForward(float Value);
 
 	// Handle move input
 	void Move(const FInputActionValue& Value);
  
 	// Handle look input
 	void Look(const FInputActionValue& Value);
+
+	// Handle Attach input
+	void PrimaryAttack(const FInputActionValue& Value);
+
+	void JumpAction();
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;

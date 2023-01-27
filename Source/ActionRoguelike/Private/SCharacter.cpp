@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+ // Fill out your copyright notice in the Description page of Project Settings.
 
 
 #include "SCharacter.h"
@@ -8,6 +8,7 @@
 #include "EnhancedInput/Public/EnhancedInputSubsystems.h"
 #include "EnhancedInput/Public/EnhancedInputComponent.h"
 #include "EnhancedInput/Public/InputActionValue.h"
+#include "GameFramework/CharacterMovementComponent.h"
 
 // Sets default values
 ASCharacter::ASCharacter()
@@ -16,10 +17,14 @@ ASCharacter::ASCharacter()
 	PrimaryActorTick.bCanEverTick = true;
 
 	SpringArmComp = CreateDefaultSubobject<USpringArmComponent>("SpringArmComp");
+	SpringArmComp->bUsePawnControlRotation = true;
 	SpringArmComp->SetupAttachment(RootComponent.Get());
 
 	CameraComp = CreateDefaultSubobject<UCameraComponent>("CameraComp");
 	CameraComp->SetupAttachment(SpringArmComp.Get());
+
+	GetCharacterMovement()->bOrientRotationToMovement = true;
+	bUseControllerRotationYaw = false;
 }
 
 // Called when the game starts or when spawned
@@ -27,11 +32,6 @@ void ASCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 	
-}
-
-void ASCharacter::MoveForward(float Value)
-{
-	AddMovementInput(GetActorForwardVector(), Value);
 }
 
 void ASCharacter::Move(const FInputActionValue& Value)
@@ -48,6 +48,7 @@ void ASCharacter::Move(const FInputActionValue& Value)
 			const FVector Direction = MovementRotation.RotateVector(FVector::ForwardVector);
 
 			AddMovementInput(Direction, MoveValue.X);
+			
 		}
 
 		// Right/Lef direction
@@ -80,8 +81,24 @@ void ASCharacter::Look(const FInputActionValue& Value)
 	}
 }
 
+ void ASCharacter::PrimaryAttack(const FInputActionValue& Value)
+ {
+	FVector HandLocation = GetMesh()->GetSocketLocation("Muzzle_01");
+	
+	FTransform SpawnTM = FTransform(GetControlRotation(), HandLocation);
 
-// Called every frame
+	FActorSpawnParameters SpawnParams;
+	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+
+	GetWorld()->SpawnActor<AActor>(ProjectileClass, SpawnTM, SpawnParams);
+ }
+
+void ASCharacter::JumpAction()
+{
+	Jump();
+}
+
+ // Called every frame
 void ASCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
@@ -105,5 +122,6 @@ void ASCharacter::SetupPlayerInputComponent(class UInputComponent* PlayerInputCo
 	// Bind the actions
 	PEI->BindAction(IA_Move, ETriggerEvent::Triggered, this, &ASCharacter::Move);
 	PEI->BindAction(IA_Look, ETriggerEvent::Triggered, this, &ASCharacter::Look);
+	PEI->BindAction(IA_PrimaryAttack, ETriggerEvent::Started, this, &ASCharacter::PrimaryAttack);
+	PEI->BindAction(IA_Jump, ETriggerEvent::Triggered, this, &ASCharacter::JumpAction);
 }
-
