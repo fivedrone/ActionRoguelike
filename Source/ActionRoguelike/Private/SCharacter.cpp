@@ -2,9 +2,10 @@
 
 
 #include "SCharacter.h"
+
+ #include "SInteractComponent.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "Camera/CameraComponent.h"
-#include "EnhancedInput/Public/InputMappingContext.h"
 #include "EnhancedInput/Public/EnhancedInputSubsystems.h"
 #include "EnhancedInput/Public/EnhancedInputComponent.h"
 #include "EnhancedInput/Public/InputActionValue.h"
@@ -22,6 +23,8 @@ ASCharacter::ASCharacter()
 
 	CameraComp = CreateDefaultSubobject<UCameraComponent>("CameraComp");
 	CameraComp->SetupAttachment(SpringArmComp.Get());
+
+	InteractionComp = CreateDefaultSubobject<USInteractComponent>("InteractionComp");
 
 	GetCharacterMovement()->bOrientRotationToMovement = true;
 	bUseControllerRotationYaw = false;
@@ -83,6 +86,29 @@ void ASCharacter::Look(const FInputActionValue& Value)
 
  void ASCharacter::PrimaryAttack(const FInputActionValue& Value)
  {
+	PlayAnimMontage(AttackAnim);
+
+	GetWorldTimerManager().SetTimer(TimerHandle_PrimaryAttack, this, &ASCharacter::PrimaryAttack_TimeElapsed, 0.2f);
+
+	//GetWorldTimerManager().ClearTimer(TimerHandle_PrimaryAttack);
+	
+ }
+
+void ASCharacter::JumpAction()
+{
+	Jump();
+}
+
+ void ASCharacter::PrimaryInteract()
+ {
+	if(InteractionComp)
+	{
+		InteractionComp->PrimaryInteract();
+	}
+ }
+
+ void ASCharacter::PrimaryAttack_TimeElapsed()
+ {
 	FVector HandLocation = GetMesh()->GetSocketLocation("Muzzle_01");
 	
 	FTransform SpawnTM = FTransform(GetControlRotation(), HandLocation);
@@ -92,11 +118,6 @@ void ASCharacter::Look(const FInputActionValue& Value)
 
 	GetWorld()->SpawnActor<AActor>(ProjectileClass, SpawnTM, SpawnParams);
  }
-
-void ASCharacter::JumpAction()
-{
-	Jump();
-}
 
  // Called every frame
 void ASCharacter::Tick(float DeltaTime)
@@ -124,4 +145,5 @@ void ASCharacter::SetupPlayerInputComponent(class UInputComponent* PlayerInputCo
 	PEI->BindAction(IA_Look, ETriggerEvent::Triggered, this, &ASCharacter::Look);
 	PEI->BindAction(IA_PrimaryAttack, ETriggerEvent::Started, this, &ASCharacter::PrimaryAttack);
 	PEI->BindAction(IA_Jump, ETriggerEvent::Triggered, this, &ASCharacter::JumpAction);
+	PEI->BindAction(IA_PrimaryInteract, ETriggerEvent::Started, this, &ASCharacter::PrimaryInteract);
 }
