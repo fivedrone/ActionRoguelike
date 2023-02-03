@@ -3,6 +3,7 @@
 
 #include "SCharacter.h"
 
+#include "SGameplayInterface.h"
  #include "SInteractComponent.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "Camera/CameraComponent.h"
@@ -11,7 +12,7 @@
 #include "EnhancedInput/Public/InputActionValue.h"
 #include "GameFramework/CharacterMovementComponent.h"
 
-// Sets default values
+ // Sets default values
 ASCharacter::ASCharacter()
 {
  	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
@@ -110,12 +111,37 @@ void ASCharacter::JumpAction()
  void ASCharacter::PrimaryAttack_TimeElapsed()
  {
 	FVector HandLocation = GetMesh()->GetSocketLocation("Muzzle_01");
+
+	FCollisionObjectQueryParams ObjectQueryParams;
+	ObjectQueryParams.AddObjectTypesToQuery(ECC_WorldDynamic);
+	ObjectQueryParams.AddObjectTypesToQuery(ECC_WorldStatic);
+
+	FVector CameraLocation;
+	FRotator CameraRotation;
+
+	CameraLocation = CameraComp->GetComponentLocation();
+	CameraRotation = CameraComp->GetComponentRotation();
+
+	FVector End = CameraLocation + (CameraRotation.Vector() * 5000);
 	
-	FTransform SpawnTM = FTransform(GetControlRotation(), HandLocation);
+	FHitResult Hit;
+	bool bBlockingHit = GetWorld()->LineTraceSingleByObjectType(Hit, CameraLocation, End, ObjectQueryParams);
+
+	float Radius = 30.f;
+	
+	FCollisionShape Shape;
+	Shape.SetSphere(Radius);
+
+	FVector IP = Hit.bBlockingHit? Hit.ImpactPoint : Hit.TraceEnd;
+
+	//타켓에서 핸드를 뺴면 백터가 나오고 rotation을 구함
+	
+	FTransform SpawnTM = FTransform((IP-HandLocation).Rotation(), HandLocation);
 
 	FActorSpawnParameters SpawnParams;
 	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
-
+	SpawnParams.Instigator = this;
+	
 	GetWorld()->SpawnActor<AActor>(ProjectileClass, SpawnTM, SpawnParams);
  }
 
@@ -145,5 +171,5 @@ void ASCharacter::SetupPlayerInputComponent(class UInputComponent* PlayerInputCo
 	PEI->BindAction(IA_Look, ETriggerEvent::Triggered, this, &ASCharacter::Look);
 	PEI->BindAction(IA_PrimaryAttack, ETriggerEvent::Started, this, &ASCharacter::PrimaryAttack);
 	PEI->BindAction(IA_Jump, ETriggerEvent::Triggered, this, &ASCharacter::JumpAction);
-	PEI->BindAction(IA_PrimaryInteract, ETriggerEvent::Started, this, &ASCharacter::PrimaryInteract);
+	PEI->BindAction(IA_PrimaryInteract, ETriggerEvent::Triggered, this, &ASCharacter::PrimaryInteract);
 }

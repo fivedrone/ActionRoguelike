@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Camera/CameraComponent.h"
 #include "GameFramework/Character.h"
 #include "EnhancedInput/Public/InputActionValue.h"
 #include "SCharacter.generated.h" 
@@ -64,6 +65,13 @@ protected: // for input protected
 	UPROPERTY(VisibleAnywhere)
 	TObjectPtr<UCameraComponent> CameraComp;
 
+public:
+	TObjectPtr<UCameraComponent> GetCameraComp() const
+	{
+		return CameraComp;
+	}
+
+protected:
 	UPROPERTY(VisibleAnywhere)
 	USInteractComponent* InteractionComp;
 
