@@ -29,6 +29,7 @@ protected:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	UParticleSystemComponent* EffectComp;
+
 	
 	virtual void BeginPlay() override;
 

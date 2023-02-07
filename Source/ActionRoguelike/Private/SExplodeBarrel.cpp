@@ -2,6 +2,8 @@
 
 
 #include "SExplodeBarrel.h"
+
+#include "Particles/ParticleSystemComponent.h"
 #include "PhysicsEngine/RadialForceComponent.h"
 
 
@@ -18,6 +20,10 @@ ASExplodeBarrel::ASExplodeBarrel()
 	RadialForceMesh = CreateDefaultSubobject<URadialForceComponent>(TEXT("RadialForceMesh"));
 	RadialForceMesh->SetupAttachment(CylinderMesh);
 	RadialForceMesh->SetAutoActivate(false);
+
+	ExplodeParticle = CreateDefaultSubobject<UParticleSystemComponent>(TEXT("ExplodeParticle"));
+	ExplodeParticle->SetupAttachment(CylinderMesh);
+	ExplodeParticle->SetAutoActivate(false);
 
 	RadialForceMesh->Radius = 750.0f;
 	RadialForceMesh->ImpulseStrength = 2500.0f;
@@ -44,5 +50,9 @@ void ASExplodeBarrel::OnActorHit(UPrimitiveComponent* HitComponent, AActor* Othe
 
 	FString CombinedString = FString::Printf(TEXT("Hit at location : %s"), *Hit.ImpactPoint.ToString());
 	DrawDebugString(GetWorld(), Hit.ImpactPoint, CombinedString, nullptr, FColor::Green, 2.0f, true);
+
+	ExplodeParticle->Activate();
+	
+	SetLifeSpan(0.4f);
 }
 

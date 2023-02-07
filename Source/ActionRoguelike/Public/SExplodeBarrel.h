@@ -26,6 +26,9 @@ protected:
 	UPROPERTY(EditAnywhere)
 	URadialForceComponent* RadialForceMesh;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	UParticleSystemComponent* ExplodeParticle;
+
 	virtual void PostInitializeComponents() override;
 
 	

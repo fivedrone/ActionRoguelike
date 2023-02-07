@@ -24,6 +24,13 @@ protected:
 
 	UPROPERTY(EditAnywhere, Category = "Attack")
 	UAnimMontage* AttackAnim;
+
+	UPROPERTY(EditAnywhere, Category = "Attack")
+	TSubclassOf<AActor> UltimateClass;
+
+	UPROPERTY(EditAnywhere, Category = "Attack")
+	TSubclassOf<AActor> TeleportClass;
+	
 	
 	FTimerHandle TimerHandle_PrimaryAttack;
 
@@ -57,7 +64,13 @@ protected: // for input protected
 	class UInputAction* IA_Jump;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Enhanced Input")
-	class UInputAction* IA_PrimaryInteract; 
+	class UInputAction* IA_PrimaryInteract;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Enhanced Input")
+	class UInputAction* IA_BlackHole;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Enhanced Input")
+	class UInputAction* IA_Teleport;
 	
 	UPROPERTY(VisibleAnywhere)
 	TObjectPtr<USpringArmComponent> SpringArmComp;
@@ -92,4 +105,12 @@ protected:
 	void PrimaryInteract();
 
 	void PrimaryAttack_TimeElapsed();
+
+	void BlackHole(const FInputActionValue& Value);
+
+	void BlackHole_TimeElapsed();
+
+	void Teleport(const FInputActionValue& Value);
+
+	void Teleport_TimeElapsed();
 };

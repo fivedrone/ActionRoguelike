@@ -122,7 +122,7 @@ void ASCharacter::JumpAction()
 	CameraLocation = CameraComp->GetComponentLocation();
 	CameraRotation = CameraComp->GetComponentRotation();
 
-	FVector End = CameraLocation + (CameraRotation.Vector() * 5000);
+	FVector End = CameraLocation + (CameraRotation.Vector() * 10000);
 	
 	FHitResult Hit;
 	bool bBlockingHit = GetWorld()->LineTraceSingleByObjectType(Hit, CameraLocation, End, ObjectQueryParams);
@@ -143,6 +143,100 @@ void ASCharacter::JumpAction()
 	SpawnParams.Instigator = this;
 	
 	GetWorld()->SpawnActor<AActor>(ProjectileClass, SpawnTM, SpawnParams);
+ }
+
+
+ void ASCharacter::Teleport(const FInputActionValue& Value)
+ {
+	PlayAnimMontage(AttackAnim);
+
+	GetWorldTimerManager().SetTimer(TimerHandle_PrimaryAttack, this, &ASCharacter::Teleport_TimeElapsed, 0.2f);
+
+	//GetWorldTimerManager().ClearTimer(TimerHandle_PrimaryAttack);
+ }
+
+ void ASCharacter::Teleport_TimeElapsed()
+ {
+	FVector HandLocation = GetMesh()->GetSocketLocation("Muzzle_01");
+
+	FCollisionObjectQueryParams ObjectQueryParams;
+	ObjectQueryParams.AddObjectTypesToQuery(ECC_WorldDynamic);
+	ObjectQueryParams.AddObjectTypesToQuery(ECC_WorldStatic);
+
+	FVector CameraLocation;
+	FRotator CameraRotation;
+
+	CameraLocation = CameraComp->GetComponentLocation();
+	CameraRotation = CameraComp->GetComponentRotation();
+
+	FVector End = CameraLocation + (CameraRotation.Vector() * 10000);
+	
+	FHitResult Hit;
+	bool bBlockingHit = GetWorld()->LineTraceSingleByObjectType(Hit, CameraLocation, End, ObjectQueryParams);
+
+	float Radius = 30.f;
+	
+	FCollisionShape Shape;
+	Shape.SetSphere(Radius);
+
+	FVector IP = Hit.bBlockingHit? Hit.ImpactPoint : Hit.TraceEnd;
+
+	//타켓에서 핸드를 뺴면 백터가 나오고 rotation을 구함
+	
+	FTransform SpawnTM = FTransform((IP-HandLocation).Rotation(), HandLocation);
+
+	FActorSpawnParameters SpawnParams;
+	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+	SpawnParams.Instigator = this;
+	
+	GetWorld()->SpawnActor<AActor>(TeleportClass, SpawnTM, SpawnParams);
+ }
+
+ void ASCharacter::BlackHole(const FInputActionValue& Value)
+{
+	PlayAnimMontage(AttackAnim);
+
+	GetWorldTimerManager().SetTimer(TimerHandle_PrimaryAttack, this, &ASCharacter::BlackHole_TimeElapsed, 0.2f);
+
+	//GetWorldTimerManager().ClearTimer(TimerHandle_PrimaryAttack);
+	
+}
+
+ void ASCharacter::BlackHole_TimeElapsed()
+ {
+	FVector HandLocation = GetMesh()->GetSocketLocation("Muzzle_01");
+
+	FCollisionObjectQueryParams ObjectQueryParams;
+	ObjectQueryParams.AddObjectTypesToQuery(ECC_WorldDynamic);
+	ObjectQueryParams.AddObjectTypesToQuery(ECC_WorldStatic);
+
+	FVector CameraLocation;
+	FRotator CameraRotation;
+
+	CameraLocation = CameraComp->GetComponentLocation();
+	CameraRotation = CameraComp->GetComponentRotation();
+
+	FVector End = CameraLocation + (CameraRotation.Vector() * 10000);
+	
+	FHitResult Hit;
+	bool bBlockingHit = GetWorld()->LineTraceSingleByObjectType(Hit, CameraLocation, End, ObjectQueryParams);
+
+	float Radius = 30.f;
+	
+	FCollisionShape Shape;
+	Shape.SetSphere(Radius);
+
+	FVector IP = Hit.bBlockingHit? Hit.ImpactPoint : Hit.TraceEnd;
+
+	//타켓에서 핸드를 뺴면 백터가 나오고 rotation을 구함
+	
+	FTransform SpawnTM = FTransform((IP-HandLocation).Rotation(), HandLocation);
+
+	FActorSpawnParameters SpawnParams;
+	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+	SpawnParams.Instigator = this;
+	
+	GetWorld()->SpawnActor<AActor>(UltimateClass, SpawnTM, SpawnParams);
  }
 
  // Called every frame
@@ -172,4 +266,6 @@ void ASCharacter::SetupPlayerInputComponent(class UInputComponent* PlayerInputCo
 	PEI->BindAction(IA_PrimaryAttack, ETriggerEvent::Started, this, &ASCharacter::PrimaryAttack);
 	PEI->BindAction(IA_Jump, ETriggerEvent::Triggered, this, &ASCharacter::JumpAction);
 	PEI->BindAction(IA_PrimaryInteract, ETriggerEvent::Triggered, this, &ASCharacter::PrimaryInteract);
+	PEI->BindAction(IA_BlackHole, ETriggerEvent::Started, this, &ASCharacter::BlackHole);
+	PEI->BindAction(IA_Teleport, ETriggerEvent::Started, this, &ASCharacter::Teleport);
 }
