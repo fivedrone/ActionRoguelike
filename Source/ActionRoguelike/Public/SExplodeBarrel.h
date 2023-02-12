@@ -14,10 +14,6 @@ class ACTIONROGUELIKE_API ASExplodeBarrel : public AActor
 {
 	GENERATED_BODY()
 
-public:
-	// Sets default values for this actor's properties
-	ASExplodeBarrel();
-
 protected:
 	
 	UPROPERTY(EditAnywhere)
@@ -28,10 +24,13 @@ protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	UParticleSystemComponent* ExplodeParticle;
+public:
+	// Sets default values for this actor's properties
+	ASExplodeBarrel();
 
-	virtual void PostInitializeComponents() override;
-
+protected:
 	
+	virtual void PostInitializeComponents() override;
 	
 	UFUNCTION(BlueprintCallable)
 	void OnActorHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit);

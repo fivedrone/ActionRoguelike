@@ -13,9 +13,6 @@ class USGameplayInterface : public UInterface
 	GENERATED_BODY()
 };
 
-/**
- * 
- */
 class ACTIONROGUELIKE_API ISGameplayInterface
 {
 	GENERATED_BODY()

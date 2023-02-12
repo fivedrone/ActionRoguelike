@@ -2,15 +2,15 @@
 
 
 #include "SCharacter.h"
-
-#include "SGameplayInterface.h"
- #include "SInteractComponent.h"
+#include "SAttributeComponent.h"
+#include "SInteractComponent.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "Camera/CameraComponent.h"
 #include "EnhancedInput/Public/EnhancedInputSubsystems.h"
 #include "EnhancedInput/Public/EnhancedInputComponent.h"
 #include "EnhancedInput/Public/InputActionValue.h"
 #include "GameFramework/CharacterMovementComponent.h"
+#include "SMagicProjectile.h"
 
  // Sets default values
 ASCharacter::ASCharacter()
@@ -29,14 +29,21 @@ ASCharacter::ASCharacter()
 
 	GetCharacterMovement()->bOrientRotationToMovement = true;
 	bUseControllerRotationYaw = false;
+
+	AttributeComp = CreateDefaultSubobject<USAttributeComponent>("AttributeComp");
 }
 
-// Called when the game starts or when spawned
-void ASCharacter::BeginPlay()
-{
-	Super::BeginPlay();
+ void ASCharacter::Fire(TSubclassOf<ASMagicProjectile> PJClass)
+ {
+	FVector HandLocation = GetMesh()->GetSocketLocation("Muzzle_01");
+
+	FActorSpawnParameters SpawnParams;
+	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+	SpawnParams.Instigator = this;
 	
-}
+	GetWorld()->SpawnActor<ASMagicProjectile>(PJClass, FTransform(HandLocation.Rotation(), HandLocation), SpawnParams);
+	
+ }
 
 void ASCharacter::Move(const FInputActionValue& Value)
 {
@@ -85,17 +92,8 @@ void ASCharacter::Look(const FInputActionValue& Value)
 	}
 }
 
- void ASCharacter::PrimaryAttack(const FInputActionValue& Value)
- {
-	PlayAnimMontage(AttackAnim);
 
-	GetWorldTimerManager().SetTimer(TimerHandle_PrimaryAttack, this, &ASCharacter::PrimaryAttack_TimeElapsed, 0.2f);
-
-	//GetWorldTimerManager().ClearTimer(TimerHandle_PrimaryAttack);
-	
- }
-
-void ASCharacter::JumpAction()
+ void ASCharacter::JumpAction()
 {
 	Jump();
 }
@@ -107,42 +105,19 @@ void ASCharacter::JumpAction()
 		InteractionComp->PrimaryInteract();
 	}
  }
+ void ASCharacter::PrimaryAttack(const FInputActionValue& Value)
+ {
+	PlayAnimMontage(AttackAnim);
+
+	GetWorldTimerManager().SetTimer(TimerHandle_PrimaryAttack, this, &ASCharacter::PrimaryAttack_TimeElapsed, 0.2f);
+
+	//GetWorldTimerManager().ClearTimer(TimerHandle_PrimaryAttack);
+	
+ }
 
  void ASCharacter::PrimaryAttack_TimeElapsed()
  {
-	FVector HandLocation = GetMesh()->GetSocketLocation("Muzzle_01");
-
-	FCollisionObjectQueryParams ObjectQueryParams;
-	ObjectQueryParams.AddObjectTypesToQuery(ECC_WorldDynamic);
-	ObjectQueryParams.AddObjectTypesToQuery(ECC_WorldStatic);
-
-	FVector CameraLocation;
-	FRotator CameraRotation;
-
-	CameraLocation = CameraComp->GetComponentLocation();
-	CameraRotation = CameraComp->GetComponentRotation();
-
-	FVector End = CameraLocation + (CameraRotation.Vector() * 10000);
-	
-	FHitResult Hit;
-	bool bBlockingHit = GetWorld()->LineTraceSingleByObjectType(Hit, CameraLocation, End, ObjectQueryParams);
-
-	float Radius = 30.f;
-	
-	FCollisionShape Shape;
-	Shape.SetSphere(Radius);
-
-	FVector IP = Hit.bBlockingHit? Hit.ImpactPoint : Hit.TraceEnd;
-
-	//타켓에서 핸드를 뺴면 백터가 나오고 rotation을 구함
-	
-	FTransform SpawnTM = FTransform((IP-HandLocation).Rotation(), HandLocation);
-
-	FActorSpawnParameters SpawnParams;
-	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
-	SpawnParams.Instigator = this;
-	
-	GetWorld()->SpawnActor<AActor>(ProjectileClass, SpawnTM, SpawnParams);
+	Fire(PrimaryAttackSlot);
  }
 
 
@@ -157,39 +132,7 @@ void ASCharacter::JumpAction()
 
  void ASCharacter::Teleport_TimeElapsed()
  {
-	FVector HandLocation = GetMesh()->GetSocketLocation("Muzzle_01");
-
-	FCollisionObjectQueryParams ObjectQueryParams;
-	ObjectQueryParams.AddObjectTypesToQuery(ECC_WorldDynamic);
-	ObjectQueryParams.AddObjectTypesToQuery(ECC_WorldStatic);
-
-	FVector CameraLocation;
-	FRotator CameraRotation;
-
-	CameraLocation = CameraComp->GetComponentLocation();
-	CameraRotation = CameraComp->GetComponentRotation();
-
-	FVector End = CameraLocation + (CameraRotation.Vector() * 10000);
-	
-	FHitResult Hit;
-	bool bBlockingHit = GetWorld()->LineTraceSingleByObjectType(Hit, CameraLocation, End, ObjectQueryParams);
-
-	float Radius = 30.f;
-	
-	FCollisionShape Shape;
-	Shape.SetSphere(Radius);
-
-	FVector IP = Hit.bBlockingHit? Hit.ImpactPoint : Hit.TraceEnd;
-
-	//타켓에서 핸드를 뺴면 백터가 나오고 rotation을 구함
-	
-	FTransform SpawnTM = FTransform((IP-HandLocation).Rotation(), HandLocation);
-
-	FActorSpawnParameters SpawnParams;
-	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
-	SpawnParams.Instigator = this;
-	
-	GetWorld()->SpawnActor<AActor>(TeleportClass, SpawnTM, SpawnParams);
+	Fire(TeleportSlot);
  }
 
  void ASCharacter::BlackHole(const FInputActionValue& Value)
@@ -204,47 +147,8 @@ void ASCharacter::JumpAction()
 
  void ASCharacter::BlackHole_TimeElapsed()
  {
-	FVector HandLocation = GetMesh()->GetSocketLocation("Muzzle_01");
-
-	FCollisionObjectQueryParams ObjectQueryParams;
-	ObjectQueryParams.AddObjectTypesToQuery(ECC_WorldDynamic);
-	ObjectQueryParams.AddObjectTypesToQuery(ECC_WorldStatic);
-
-	FVector CameraLocation;
-	FRotator CameraRotation;
-
-	CameraLocation = CameraComp->GetComponentLocation();
-	CameraRotation = CameraComp->GetComponentRotation();
-
-	FVector End = CameraLocation + (CameraRotation.Vector() * 10000);
-	
-	FHitResult Hit;
-	bool bBlockingHit = GetWorld()->LineTraceSingleByObjectType(Hit, CameraLocation, End, ObjectQueryParams);
-
-	float Radius = 30.f;
-	
-	FCollisionShape Shape;
-	Shape.SetSphere(Radius);
-
-	FVector IP = Hit.bBlockingHit? Hit.ImpactPoint : Hit.TraceEnd;
-
-	//타켓에서 핸드를 뺴면 백터가 나오고 rotation을 구함
-	
-	FTransform SpawnTM = FTransform((IP-HandLocation).Rotation(), HandLocation);
-
-	FActorSpawnParameters SpawnParams;
-	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
-	SpawnParams.Instigator = this;
-	
-	GetWorld()->SpawnActor<AActor>(UltimateClass, SpawnTM, SpawnParams);
+	Fire(UltimateSlot);
  }
-
- // Called every frame
-void ASCharacter::Tick(float DeltaTime)
-{
-	Super::Tick(DeltaTime);
-
-}
 
 // Called to bind functionality to input
 void ASCharacter::SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent)

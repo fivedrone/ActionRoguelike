@@ -14,13 +14,8 @@ UCLASS()
 class ACTIONROGUELIKE_API ASMagicProjectile : public AActor
 {
 	GENERATED_BODY()
-
-public:
-	// Sets default values for this actor's properties
-	ASMagicProjectile();
-
+	
 protected:
-	// Called when the game starts or when
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	USphereComponent* SphereComp;
 
@@ -30,10 +25,50 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	UParticleSystemComponent* EffectComp;
 
-	
-	virtual void BeginPlay() override;
+	UPROPERTY(EditAnywhere, Category = "Projectile")
+	UParticleSystem* ExplodeSlot;
 
+	UPROPERTY(EditAnywhere, Category="Projectile")
+	float ProjectileSpeed;
+
+	UPROPERTY(EditAnywhere, Category="Projectile")
+	float LifeTime;
+
+	UPROPERTY(EditAnywhere, Category="Projectile")
+	float Damage;
+
+	// attackrange = lifeTime * initial speed
+	UPROPERTY(VisibleDefaultsOnly, Category="Projectile")
+	float AttackRange;
+	
+	AActor* Owner;
+
+	FName ProjectileType = "MProjectile";
+	
+private:
+	FVector2D ScreenPosition;
+	FVector WorldPosition;
+	FVector WorldDirection;
+
+	bool IsTraceReady;
+
+	
+protected:
+	
+	UFUNCTION()
+	virtual void OnActorOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bBFromSweep, const FHitResult& SweepResult);
+	// Sets default values for this actor's properties
+	ASMagicProjectile();
+	
 public:
-	// Called every frame
-	virtual void Tick(float DeltaTime) override;
+
+	virtual void BeginPlay() override;
+	
+	bool InitTrace();
+
+	void SceneTrace();
+
+	void ObjectTrace();
+
+	virtual void Destroyed() override;
 };

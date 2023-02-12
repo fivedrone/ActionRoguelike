@@ -2,7 +2,7 @@
 
 
 #include "SExplodeBarrel.h"
-
+#include "SAttributeComponent.h"
 #include "Particles/ParticleSystemComponent.h"
 #include "PhysicsEngine/RadialForceComponent.h"
 
@@ -42,17 +42,23 @@ void ASExplodeBarrel::PostInitializeComponents()
 
 void ASExplodeBarrel::OnActorHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
 {
+	UE_LOG(LogTemp, Log, TEXT("Start"));
 	RadialForceMesh->FireImpulse();
-
+	ExplodeParticle->Activate();
+	SetLifeSpan(0.4f);
 	UE_LOG(LogTemp, Log, TEXT("OnActorHit in Explosive Barrel"));
-
 	UE_LOG(LogTemp, Warning, TEXT("OtherActor : %s, at game time: %f"), *GetNameSafe(OtherActor), GetWorld()->TimeSeconds);
-
+	
 	FString CombinedString = FString::Printf(TEXT("Hit at location : %s"), *Hit.ImpactPoint.ToString());
 	DrawDebugString(GetWorld(), Hit.ImpactPoint, CombinedString, nullptr, FColor::Green, 2.0f, true);
-
-	ExplodeParticle->Activate();
-	
-	SetLifeSpan(0.4f);
+	if(IsValid(OtherActor))
+	{
+		USAttributeComponent* EBComp = Cast<USAttributeComponent>(OtherActor->GetComponentByClass(USAttributeComponent::StaticClass())); 
+		
+		if(IsValid(EBComp))
+		{
+			EBComp->ApplyHealthChange(-50);
+		}
+	}
 }
 

@@ -3,7 +3,6 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Camera/CameraComponent.h"
 #include "GameFramework/Character.h"
 #include "EnhancedInput/Public/InputActionValue.h"
 #include "SCharacter.generated.h" 
@@ -11,6 +10,8 @@
 class UCameraComponent;
 class USpringArmComponent;
 class USInteractComponent;
+class USAttributeComponent;
+class ASMagicProjectile;
 
 UCLASS()
 class ACTIONROGUELIKE_API ASCharacter : public ACharacter
@@ -19,34 +20,50 @@ class ACTIONROGUELIKE_API ASCharacter : public ACharacter
 
 protected:
 	
-	UPROPERTY(EditAnywhere, Category = "Attack")
+	UPROPERTY(VisibleAnywhere)
+	TObjectPtr<USpringArmComponent> SpringArmComp;
+
+	UPROPERTY(VisibleAnywhere)
+	TObjectPtr<UCameraComponent> CameraComp;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
+	USAttributeComponent* AttributeComp;
+
+	UPROPERTY(VisibleAnywhere)
+	USInteractComponent* InteractionComp;
+
+public:
+	// Sets default values for this character's properties
+	ASCharacter();
+
+	// Called to bind functionality to input
+	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
+
+	TObjectPtr<UCameraComponent> GetCameraComp() const
+	{
+		return CameraComp;
+	}
+	
+protected: // for input protected
+	
 	TSubclassOf<AActor> ProjectileClass;
+	
+	UPROPERTY(EditAnywhere, Category = "Attack")
+	TSubclassOf<ASMagicProjectile> PrimaryAttackSlot;
+	
+	UPROPERTY(EditAnywhere, Category = "Attack")
+	TSubclassOf<ASMagicProjectile> UltimateSlot;
+
+	UPROPERTY(EditAnywhere, Category = "Attack")
+	TSubclassOf<ASMagicProjectile> TeleportSlot;
 
 	UPROPERTY(EditAnywhere, Category = "Attack")
 	UAnimMontage* AttackAnim;
 
-	UPROPERTY(EditAnywhere, Category = "Attack")
-	TSubclassOf<AActor> UltimateClass;
-
-	UPROPERTY(EditAnywhere, Category = "Attack")
-	TSubclassOf<AActor> TeleportClass;
-	
+	UPROPERTY(EditAnywhere, Category="1")
+	FName FireLocation = "Muzzle_01";
 	
 	FTimerHandle TimerHandle_PrimaryAttack;
-
-	
-public:
-	// Sets default values for this character's properties
-	ASCharacter();
-	
-public:	
-	// Called every frame
-	virtual void Tick(float DeltaTime) override;
-
-	// Called to bind functionality to input
-	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
-	
-protected: // for input protected
 	
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Enhanced Input")
 	class UInputMappingContext* InputMapping;
@@ -71,25 +88,8 @@ protected: // for input protected
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Enhanced Input")
 	class UInputAction* IA_Teleport;
-	
-	UPROPERTY(VisibleAnywhere)
-	TObjectPtr<USpringArmComponent> SpringArmComp;
-
-	UPROPERTY(VisibleAnywhere)
-	TObjectPtr<UCameraComponent> CameraComp;
 
 public:
-	TObjectPtr<UCameraComponent> GetCameraComp() const
-	{
-		return CameraComp;
-	}
-
-protected:
-	UPROPERTY(VisibleAnywhere)
-	USInteractComponent* InteractionComp;
-
-	// Called when the game starts or when spawned
-	virtual void BeginPlay() override;
 
 	// Handle move input
 	void Move(const FInputActionValue& Value);
@@ -97,20 +97,23 @@ protected:
 	// Handle look input
 	void Look(const FInputActionValue& Value);
 
-	// Handle Attach input
-	void PrimaryAttack(const FInputActionValue& Value);
+	void Fire(TSubclassOf<ASMagicProjectile> PJClass);
 
+	// Handle Jump input
 	void JumpAction();
 
+	// Handle Interact input
 	void PrimaryInteract();
 
+	// Handle Attack input
+	void PrimaryAttack(const FInputActionValue& Value);
 	void PrimaryAttack_TimeElapsed();
 
+	// Handle Ultimate input
 	void BlackHole(const FInputActionValue& Value);
-
 	void BlackHole_TimeElapsed();
 
+	// Handle Teleport input
 	void Teleport(const FInputActionValue& Value);
-
 	void Teleport_TimeElapsed();
 };
